@@ -1,0 +1,43 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0' # Run weekly on Sundays
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+
+    # Mobile App Audit
+    - name: Set up Node.js for Mobile
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    - name: NPM Audit (Mobile)
+      working-directory: ./mobileapp
+      run: npm audit --audit-level=high
+
+    # Backend Audit
+    - name: Set up Rust for Backend
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+    - name: Install cargo-audit
+      run: cargo install cargo-audit
+    - name: Cargo Audit (Backend)
+      working-directory: ./backend
+      run: cargo audit
+
+    # Contracts Audit
+    - name: Cargo Audit (Contracts)
+      working-directory: ./contracts
+      run: cargo audit
